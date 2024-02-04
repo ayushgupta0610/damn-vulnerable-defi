@@ -38,7 +38,7 @@ contract SelfiePoolHack {
     error InvalidToken();
     error FeeNotZero();
 
-     constructor(address playerAddress, address simpleGovernanceAddress, 
+    constructor(address playerAddress, address simpleGovernanceAddress, 
         address selfiePoolAddress, address tokenAddress) {
         player = playerAddress;
         simpleGovernance = ISimpleGovernance(simpleGovernanceAddress);
